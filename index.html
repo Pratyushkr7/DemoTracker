@@ -238,6 +238,17 @@
     margin-left: auto; flex-shrink: 0;
     padding: 1px 5px;
   }
+  /* Delete button (user-added markers only) */
+  .dis-delete {
+    position: absolute; top: 8px; right: 8px;
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,80,60,0.45); font-size: 12px;
+    padding: 2px 4px; line-height: 1;
+    border-radius: 3px; transition: color 0.15s, background 0.15s;
+    display: none; /* shown on hover via parent */
+  }
+  .dis-item:hover .dis-delete { display: block; }
+  .dis-delete:hover { color: #ff3322; background: rgba(255,50,30,0.12); }
 
   /* ── Panel summary stats bar ── */
   #panel-summary {
@@ -1835,7 +1846,12 @@ function renderDisruptions() {
       chipsHtml += '</div>';
     }
 
+    const deleteBtn = d.userAdded
+      ? `<button class="dis-delete" onclick="event.stopPropagation();removeMarker(${d.id})" title="Delete marker">🗑</button>`
+      : '';
+
     return `<div class="dis-item ${selected}" onclick="selectItem(${d.id})" data-id="${d.id}" style="--item-strip:${stripColor}">
+      ${deleteBtn}
       <div class="dis-co" title="${d.company}">${name}</div>
       <div class="dis-loc" title="${locStr}">${locStr}</div>
       <div class="dis-status-row">
@@ -2073,14 +2089,82 @@ function togglePanel() {
   setTimeout(()=>{ if(globe){ const el=document.getElementById('globeViz'); globe.width(el.clientWidth).height(el.clientHeight); }}, 220);
 }
 
+// ── API INTEGRATION ──────────────────────────────────────────────────────────
+const API_BASE = '/api/markers';
+
+// Load all user-added markers from the shared database
+async function loadUserMarkersFromAPI() {
+  try {
+    const r = await fetch(API_BASE);
+    if (!r.ok) { console.warn('[API] GET failed:', r.status); return; }
+    const markers = await r.json();
+    markers.forEach(m => {
+      // Avoid duplicates if called multiple times
+      if (!DISRUPTIONS.find(d => d.dbId === m.dbId)) {
+        DISRUPTIONS.push({ ...m, userAdded: true });
+      }
+    });
+    renderGlobe();
+    renderStats();
+    renderDisruptions();
+  } catch(err) {
+    console.warn('[API] Could not load markers (offline or not deployed):', err.message);
+  }
+}
+
+// Save a new marker to the shared database
+async function saveMarkerToAPI(marker, editorKey) {
+  const r = await fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-editor-key': editorKey },
+    body: JSON.stringify(marker),
+  });
+  if (r.status === 401) throw Object.assign(new Error('Invalid editor key.'), { code: 401 });
+  if (!r.ok) {
+    const body = await r.json().catch(() => ({}));
+    throw new Error(body.error || `Server error ${r.status}`);
+  }
+  return r.json();
+}
+
+// Delete a marker from the shared database
+async function deleteMarkerFromAPI(dbId, editorKey) {
+  const r = await fetch(`${API_BASE}?dbId=${dbId}`, {
+    method: 'DELETE',
+    headers: { 'x-editor-key': editorKey },
+  });
+  if (r.status === 401) throw Object.assign(new Error('Invalid editor key.'), { code: 401 });
+  if (!r.ok) {
+    const body = await r.json().catch(() => ({}));
+    throw new Error(body.error || `Server error ${r.status}`);
+  }
+}
+
+// ── EDITOR KEY (session-scoped, never persisted to disk) ──────────────────
+// Editors enter a secret key once per browser tab; it's forgotten when tab closes.
+function getEditorKey() {
+  if (window._editorKey) return window._editorKey;
+  const key = window.prompt('Enter editor key to modify markers:');
+  if (!key) return null;
+  window._editorKey = key;
+  return key;
+}
+
 // ── BOOT ──
 async function boot() {
-  initGlobe();
-  renderGlobe();
-  renderStats();
-  renderDisruptions();
-  document.getElementById('upd-time').textContent = new Date().toLocaleTimeString();
-  setTimeout(()=>{ document.getElementById('loading').classList.add('hidden'); }, 900);
+  try {
+    initGlobe();
+    renderGlobe();
+    renderStats();
+    renderDisruptions();
+    document.getElementById('upd-time').textContent = new Date().toLocaleTimeString();
+    // Load shared markers in background (doesn't block the spinner)
+    loadUserMarkersFromAPI();
+  } catch(err) {
+    console.error('[boot] Fatal error:', err);
+  } finally {
+    setTimeout(()=>{ document.getElementById('loading').classList.add('hidden'); }, 900);
+  }
 }
 
 window.addEventListener('load', boot);
@@ -2144,6 +2228,10 @@ window.addEventListener('load', function() {
   window.amRemoveProduct = amRemoveProduct;
 
   window.openAddMarker = function(lat, lng) {
+    // Require editor key before opening the add-marker modal
+    const key = getEditorKey();
+    if (!key) return; // user cancelled prompt
+
     _amProducts = [];
     _amIntensity = 5;
     _amNextId = Math.max(...DISRUPTIONS.map(d=>d.id)) + 1;
@@ -2234,21 +2322,61 @@ window.addEventListener('load', function() {
       source:     source
     };
 
-    DISRUPTIONS.push(entry);
-    closeAddMarker();
+    const editorKey = window._editorKey; // already verified when modal opened
+    const submitBtn = document.getElementById('am-submit');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
 
-    // Re-render everything
-    renderGlobe();
-    renderDisruptions();
-    renderStats();
-
-    // Auto-select the new marker
-    setTimeout(() => {
-      selectedId = entry.id;
+    saveMarkerToAPI(entry, editorKey).then(saved => {
+      // Use the server-returned object (includes dbId)
+      const finalEntry = { ...entry, ...saved, userAdded: true };
+      DISRUPTIONS.push(finalEntry);
+      closeAddMarker();
+      renderGlobe();
       renderDisruptions();
-      const el = document.querySelector(`.dis-item[data-id="${entry.id}"]`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 120);
+      renderStats();
+      setTimeout(() => {
+        selectedId = finalEntry.id;
+        renderDisruptions();
+        const el = document.querySelector(`.dis-item[data-id="${finalEntry.id}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 120);
+    }).catch(err => {
+      if (err.code === 401) {
+        window._editorKey = null;
+        alert('Wrong editor key — marker not saved. Please try again.');
+      } else {
+        alert('Could not save marker: ' + err.message);
+      }
+    }).finally(() => {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Add to Globe'; }
+    });
+  };
+
+  // ── REMOVE USER-ADDED MARKER ──────────────────────────────────────────────
+  window.removeMarker = async function(id) {
+    const d = DISRUPTIONS.find(x => x.id === id);
+    if (!d || !d.userAdded) return;
+    if (!confirm(`Delete "${d.company}"? This cannot be undone.`)) return;
+
+    const editorKey = getEditorKey();
+    if (!editorKey) return;
+
+    try {
+      await deleteMarkerFromAPI(d.dbId, editorKey);
+      const idx = DISRUPTIONS.findIndex(x => x.id === id);
+      if (idx !== -1) DISRUPTIONS.splice(idx, 1);
+      if (selectedId === id) selectedId = null;
+      renderGlobe();
+      renderStats();
+      renderDisruptions();
+    } catch(err) {
+      if (err.code === 401) {
+        window._editorKey = null;
+        alert('Wrong editor key — marker not deleted.');
+      } else {
+        alert('Could not delete marker: ' + err.message);
+      }
+    }
   };
 
   // ── RIGHT-CLICK on globe ──────────────────────────────────────────────
