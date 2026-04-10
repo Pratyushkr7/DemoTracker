@@ -167,19 +167,95 @@
   #panel-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius:2px; }
   #panel-content::-webkit-scrollbar-track { background: transparent; }
 
-  /* Panel: Disruptions list */
+  /* ── Panel: Disruptions list (redesigned) ── */
   .dis-item {
-    padding: 10px 14px;
+    position: relative;
+    padding: 11px 14px 10px 16px;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background 0.12s;
+    overflow: hidden;
+  }
+  .dis-item::before {
+    content:''; position:absolute; left:0; top:0; bottom:0;
+    width: 3px;
+    background: var(--item-strip, var(--border2));
+    transition: width 0.12s;
   }
   .dis-item:hover { background: var(--surface2); }
-  .dis-item.selected { background: rgba(248,161,0,0.06); border-left: 2px solid var(--accent); }
-  .dis-co { font-size: 11px; font-weight:600; color: #ddeeff; line-height:1.3; }
-  .dis-meta { display:flex; gap:6px; align-items:center; margin-top:3px; }
-  .dis-country { font-family: var(--font-mono); font-size: 8.5px; color: var(--text-dim); }
-  .dis-prod { font-family: var(--font-mono); font-size: 8px; color: var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dis-item:hover::before { width: 4px; }
+  .dis-item.selected { background: rgba(248,161,0,0.05); }
+  .dis-item.selected::before { background: var(--accent) !important; }
+
+  /* Company name */
+  .dis-co {
+    font-size: 11.5px; font-weight: 700;
+    color: #e2eeff; line-height: 1.3;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  /* Location / facility + country */
+  .dis-loc {
+    font-family: var(--font-mono); font-size: 8px;
+    color: var(--accent2); margin-bottom: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Status badge + dots row */
+  .dis-status-row {
+    display: flex; align-items: center; gap: 5px;
+    margin-bottom: 5px; flex-wrap: nowrap;
+  }
+  .dis-dots { display:flex; gap:1px; align-items:center; flex-shrink:0; }
+  .dis-dot  { font-size:9px; line-height:1; }
+  /* Since row */
+  .dis-since {
+    font-family: var(--font-mono); font-size: 7.5px;
+    color: var(--text-muted); margin-bottom: 5px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .dis-since-lbl { text-transform:uppercase; letter-spacing:0.08em; }
+  .dis-since-val { color: var(--text-dim); }
+  /* Product chips */
+  .dis-chips { display:flex; flex-wrap:wrap; gap:3px; margin-top:2px; }
+  .dis-chip {
+    font-family: var(--font-mono); font-size: 7px;
+    padding: 1px 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border2);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .dis-chip-more {
+    font-family: var(--font-mono); font-size: 7px;
+    padding: 1px 6px;
+    background: rgba(24,144,255,0.07);
+    border: 1px solid rgba(24,144,255,0.2);
+    color: var(--accent2);
+  }
+  /* Confidence pill */
+  .dis-conf {
+    font-family: var(--font-mono); font-size: 7px;
+    margin-left: auto; flex-shrink: 0;
+    padding: 1px 5px;
+  }
+
+  /* ── Panel summary stats bar ── */
+  #panel-summary {
+    display: flex; align-items: stretch;
+    border-bottom: 1px solid var(--border);
+    background: #080c10;
+    flex-shrink: 0;
+  }
+  .sum-col {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 8px 4px;
+    border-right: 1px solid var(--border);
+  }
+  .sum-col:last-child { border-right: none; }
+  .sum-val { font-family:var(--font-mono); font-size: 17px; font-weight: 700; line-height:1; }
+  .sum-lbl { font-family:var(--font-mono); font-size: 6.5px; text-transform:uppercase;
+              letter-spacing: 0.1em; color: var(--text-muted); margin-top: 3px; }
 
   .badge {
     display: inline-flex; align-items:center;
@@ -384,10 +460,20 @@
 
   .section-divider {
     padding: 5px 14px;
-    background: var(--surface2);
+    background: #080c10;
     border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 5;
+  }
+  .sdiv-label {
     font-family:var(--font-mono); font-size:7.5px; font-weight:700;
-    color: var(--text-muted); letter-spacing:0.12em; text-transform:uppercase;
+    letter-spacing:0.12em; text-transform:uppercase;
+  }
+  .sdiv-count {
+    font-family:var(--font-mono); font-size:10px; font-weight:700;
+    background: rgba(255,255,255,0.05);
+    padding: 1px 6px; border-radius:1px;
   }
 </style>
 </head>
@@ -506,6 +592,7 @@
     <div id="panel-search-wrap">
       <input id="panel-search" type="text" placeholder="Search company, country, product…" oninput="filterPanel()"/>
     </div>
+    <div id="panel-summary"></div>
     <div id="panel-content"></div>
   </div>
 </div>
@@ -1383,28 +1470,92 @@ function renderDisruptions() {
   const reduced     = items.filter(d=>d.status==='Reduced');
   const monitoring  = items.filter(d=>d.status==='Monitoring');
 
-  let html = '';
-  function renderGroup(label, color, arr) {
-    if (!arr.length) return;
-    html += `<div class="section-divider" style="color:${color}">${label} (${arr.length})</div>`;
-    arr.forEach(d => {
-      const sc = d.status==='Shutdown'?'b-fm': d.status==='Maintenance'?'b-yellow': d.status==='Reduced'?'b-orange':'b-cyan';
-      const selected = d.id === selectedId ? 'selected' : '';
-      html += `<div class="dis-item ${selected}" onclick="selectItem(${d.id})" data-id="${d.id}">
-        <div class="dis-co">${d.company}</div>
-        <div class="dis-meta">
-          <span class="badge ${sc}">${d.status==='Shutdown'?'Force Majeure':d.status==='Maintenance'?'Maint. Shutdown':d.status==='Reduced'?'Reduced Rates':'Monitoring'}</span>
-          <span class="dis-country">${d.country}</span>
-          <span class="dis-country">· ${d.start}</span>
-        </div>
-        <div class="dis-prod">${Array.isArray(d.products)?d.products.slice(0,4).join(', '):d.products}</div>
-      </div>`;
-    });
+  // ── Summary stats bar ──
+  const total = shutdowns.length + maintenance.length + reduced.length + monitoring.length;
+  const sumEl = document.getElementById('panel-summary');
+  if (sumEl) sumEl.innerHTML =
+    `<div class="sum-col"><span class="sum-val" style="color:#ff4444">${shutdowns.length}</span><span class="sum-lbl">Force Maj.</span></div>` +
+    `<div class="sum-col"><span class="sum-val" style="color:#ff8833">${reduced.length}</span><span class="sum-lbl">Reduced</span></div>` +
+    `<div class="sum-col"><span class="sum-val" style="color:#00e5ff">${monitoring.length}</span><span class="sum-lbl">Monitoring</span></div>` +
+    `<div class="sum-col"><span class="sum-val" style="color:var(--text-dim)">${total}</span><span class="sum-lbl">Total</span></div>`;
+
+  // ── Helper: build one card ──
+  function buildCard(d, stripColor) {
+    const selected = d.id === selectedId ? 'selected' : '';
+    const sc = d.status==='Shutdown'?'b-fm': d.status==='Maintenance'?'b-yellow': d.status==='Reduced'?'b-orange':'b-cyan';
+    const statusLabel = d.status==='Shutdown'?'Force Majeure':
+                        d.status==='Maintenance'?'Maint. Shutdown':
+                        d.status==='Reduced'?'Reduced Rates':'Monitoring';
+
+    // Display name (before ' — ' or ' - ')
+    let name = d.company;
+    if (name.includes(' \u2014 ')) name = name.split(' \u2014 ')[0].trim();
+    else if (name.includes(' - ')) name = name.substring(0, name.indexOf(' - ')).trim();
+
+    // Location: facility name + country
+    let facility = '';
+    if (d.company.includes(' \u2014 ')) facility = d.company.split(' \u2014 ').slice(1).join(' \u2014 ').trim();
+    else if (d.company.includes(' - ')) facility = d.company.substring(d.company.indexOf(' - ') + 3).trim();
+    const locStr = facility ? facility + ', ' + d.country : d.country;
+
+    // Intensity dots
+    const score = getIntensityScore(d);
+    const dotCol = score >= 4 ? '#ff4444' : score >= 2 ? '#f0a020' : '#18c870';
+    const dimCol = 'rgba(255,255,255,0.12)';
+    let dotsHtml = '<span class="dis-dots">';
+    for (let i = 1; i <= 5; i++)
+      dotsHtml += `<span class="dis-dot" style="color:${i<=score?dotCol:dimCol}">&#9679;</span>`;
+    dotsHtml += '</span>';
+
+    // Confidence
+    const confCol = d.confidence==='Confirmed'?'#18c870':d.confidence==='Likely'?'#f5c050':'#5a7a95';
+    const confStr = d.confidence || '';
+
+    // Date
+    const dateHtml = d.start
+      ? `<div class="dis-since"><span class="dis-since-lbl">Since</span><span class="dis-since-val">${d.start}</span></div>`
+      : '';
+
+    // Product chips (max 4 visible)
+    const prods = Array.isArray(d.products) ? d.products : (d.products ? [d.products] : []);
+    const MAX_P = 4;
+    let chipsHtml = '';
+    if (prods.length) {
+      chipsHtml = '<div class="dis-chips">';
+      prods.slice(0, MAX_P).forEach(p => { chipsHtml += `<span class="dis-chip">${p}</span>`; });
+      if (prods.length > MAX_P) chipsHtml += `<span class="dis-chip-more">+${prods.length - MAX_P} more</span>`;
+      chipsHtml += '</div>';
+    }
+
+    return `<div class="dis-item ${selected}" onclick="selectItem(${d.id})" data-id="${d.id}" style="--item-strip:${stripColor}">
+      <div class="dis-co" title="${d.company}">${name}</div>
+      <div class="dis-loc" title="${locStr}">${locStr}</div>
+      <div class="dis-status-row">
+        <span class="badge ${sc}">${statusLabel}</span>
+        ${dotsHtml}
+        <span class="dis-conf" style="color:${confCol}">${confStr}</span>
+      </div>
+      ${dateHtml}
+      ${chipsHtml}
+    </div>`;
   }
-  renderGroup('🔴 Force Majeure / Shutdown', '#8b0000', shutdowns);
-  renderGroup('🟡 Maintenance Shutdown', '#f5c842', maintenance);
-  renderGroup('🟠 Reduced Rates', '#ff6600', reduced);
-  renderGroup('🔵 Monitoring / Alert', '#00e5ff', monitoring);
+
+  // ── Build group sections ──
+  let html = '';
+  function renderGroup(label, stripColor, arr) {
+    if (!arr.length) return;
+    html += `<div class="section-divider">
+      <span class="sdiv-label" style="color:${stripColor}">${label}</span>
+      <span class="sdiv-count" style="color:${stripColor}">${arr.length}</span>
+    </div>`;
+    arr.forEach(d => { html += buildCard(d, stripColor); });
+  }
+
+  renderGroup('Force Majeure / Shutdown', '#cc2222', shutdowns);
+  renderGroup('Maintenance Shutdown',     '#d4a800', maintenance);
+  renderGroup('Reduced Rates',            '#e05500', reduced);
+  renderGroup('Monitoring / Alert',       '#00c0d4', monitoring);
+
   if (!html) html = `<div style="padding:20px 14px;font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">No results match your filters.</div>`;
   pc.innerHTML = html;
 }
