@@ -475,6 +475,163 @@
     background: rgba(255,255,255,0.05);
     padding: 1px 6px; border-radius:1px;
   }
+
+  /* ── Add Marker Modal ── */
+  #am-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  #am-overlay.open { display: flex; }
+
+  #am-modal {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 520px; max-width: 96vw;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+    animation: amIn 0.18s ease;
+  }
+  @keyframes amIn {
+    from { opacity:0; transform: translateY(-12px) scale(0.97); }
+    to   { opacity:1; transform: none; }
+  }
+
+  #am-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  #am-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
+  }
+  #am-close {
+    background: none; border: none; cursor: pointer; color: var(--text-dim);
+    font-size: 18px; line-height:1; padding: 2px 4px;
+    transition: color 0.1s;
+  }
+  #am-close:hover { color: var(--text); }
+
+  #am-body {
+    padding: 18px 20px 8px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .am-row { display: flex; gap: 12px; }
+  .am-field { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .am-label {
+    font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
+    letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .am-label span.req { color: var(--accent); margin-left: 2px; }
+  .am-input, .am-select, .am-textarea {
+    background: #161b22;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--font-sans); font-size: 12px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%; box-sizing: border-box;
+  }
+  .am-input:focus, .am-select:focus, .am-textarea:focus {
+    border-color: var(--accent);
+  }
+  .am-select { appearance: none; cursor: pointer; }
+  .am-textarea { resize: vertical; min-height: 58px; }
+
+  /* Intensity dots selector */
+  #am-intensity-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .am-dot-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; padding: 0 2px;
+    transition: transform 0.1s;
+    line-height: 1;
+  }
+  .am-dot-btn:hover { transform: scale(1.3); }
+  #am-intensity-label {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--text-dim); margin-left: 4px;
+  }
+
+  /* Product chips */
+  #am-product-chips {
+    display: flex; flex-wrap: wrap; gap: 5px; min-height: 20px;
+  }
+  .am-prod-chip {
+    display: flex; align-items: center; gap: 4px;
+    background: rgba(0,160,200,0.12);
+    border: 1px solid rgba(0,160,200,0.3);
+    border-radius: 3px;
+    padding: 2px 7px 2px 8px;
+    font-family: var(--font-mono); font-size: 9px; color: #00c8e8;
+  }
+  .am-prod-chip button {
+    background: none; border: none; cursor: pointer;
+    color: rgba(0,200,232,0.5); font-size: 11px; padding: 0; line-height:1;
+  }
+  .am-prod-chip button:hover { color: #ff5555; }
+  #am-prod-input-wrap { display: flex; gap: 6px; }
+  #am-prod-input-wrap .am-input { flex: 1; }
+  #am-prod-add {
+    background: var(--accent); color: #000;
+    border: none; border-radius: 5px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    padding: 0 12px; letter-spacing: 0.06em; white-space: nowrap;
+    transition: opacity 0.1s;
+  }
+  #am-prod-add:hover { opacity: 0.85; }
+
+  /* Coords hint */
+  .am-coords-hint {
+    font-family: var(--font-mono); font-size: 8px; color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* Footer */
+  #am-footer {
+    display: flex; gap: 10px; justify-content: flex-end;
+    padding: 14px 20px 18px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  #am-cancel {
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text-dim);
+    cursor: pointer; font-family: var(--font-mono); font-size: 9px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 8px 18px; transition: all 0.1s;
+  }
+  #am-cancel:hover { border-color: var(--text-dim); color: var(--text); }
+  #am-submit {
+    background: var(--accent); color: #000;
+    border: none; border-radius: 6px;
+    cursor: pointer; font-family: var(--font-mono); font-size: 9px;
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 8px 22px; transition: opacity 0.1s;
+  }
+  #am-submit:hover { opacity: 0.85; }
+  #am-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Right-click hint on globe */
+  #rc-hint {
+    position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%);
+    background: rgba(13,17,23,0.85);
+    border: 1px solid var(--border);
+    border-radius: 4px; padding: 4px 10px;
+    font-family: var(--font-mono); font-size: 8px; color: var(--text-dim);
+    pointer-events: none; white-space: nowrap;
+    opacity: 0; transition: opacity 0.4s;
+    z-index: 50;
+  }
+  #rc-hint.show { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -1927,6 +2084,334 @@ async function boot() {
 }
 
 window.addEventListener('load', boot);
+
+// ── ADD MARKER MODAL ──────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  let _amProducts = [];
+  let _amIntensity = 5;
+  let _amNextId = Math.max(...DISRUPTIONS.map(d=>d.id)) + 1;
+
+  const INTENSITY_LABELS = ['','Low','Low-Med','Medium','Med-High','High'];
+  const DOT_COLORS = { 1:'#18c870', 2:'#f0a020', 3:'#f0a020', 4:'#ff5533', 5:'#ff2222' };
+  const DIM = 'rgba(255,255,255,0.14)';
+
+  function amRenderDots(score) {
+    const col = DOT_COLORS[score] || '#ff2222';
+    document.querySelectorAll('.am-dot-btn').forEach(btn => {
+      const s = parseInt(btn.dataset.score);
+      btn.style.color = s <= score ? col : DIM;
+    });
+    const lbl = document.getElementById('am-intensity-label');
+    if (lbl) lbl.textContent = INTENSITY_LABELS[score] || '';
+  }
+
+  window.amSetIntensity = function(score) {
+    _amIntensity = score;
+    amRenderDots(score);
+  };
+
+  window.amUpdateIntensity = function() {
+    // Sync intensity based on status if user hasn't picked manually
+    amRenderDots(_amIntensity);
+  };
+
+  window.amAddProduct = function() {
+    const inp = document.getElementById('am-prod-input');
+    const val = inp.value.trim();
+    if (!val) return;
+    if (!_amProducts.includes(val)) {
+      _amProducts.push(val);
+      amRenderChips();
+    }
+    inp.value = '';
+    inp.focus();
+  };
+
+  function amRemoveProduct(idx) {
+    _amProducts.splice(idx, 1);
+    amRenderChips();
+  }
+
+  function amRenderChips() {
+    const wrap = document.getElementById('am-product-chips');
+    if (!wrap) return;
+    wrap.innerHTML = _amProducts.map((p, i) =>
+      `<span class="am-prod-chip">${p}<button onclick="amRemoveProduct(${i})" title="Remove">&times;</button></span>`
+    ).join('');
+  }
+
+  // Expose so inline onclick works
+  window.amRemoveProduct = amRemoveProduct;
+
+  window.openAddMarker = function(lat, lng) {
+    _amProducts = [];
+    _amIntensity = 5;
+    _amNextId = Math.max(...DISRUPTIONS.map(d=>d.id)) + 1;
+
+    // Reset form
+    ['am-company','am-country','am-facility','am-capacity','am-desc','am-source',
+     'am-restart','am-prod-input'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const startEl = document.getElementById('am-start');
+    if (startEl) startEl.value = new Date().toISOString().slice(0,10);
+    document.getElementById('am-status').value = 'Shutdown';
+    document.getElementById('am-confidence').value = 'Confirmed';
+    document.getElementById('am-product-chips').innerHTML = '';
+
+    // Set coordinates
+    const latEl = document.getElementById('am-lat');
+    const lngEl = document.getElementById('am-lng');
+    if (latEl && lat != null) latEl.value = parseFloat(lat.toFixed(4));
+    if (lngEl && lng != null) lngEl.value = parseFloat(lng.toFixed(4));
+
+    amRenderDots(_amIntensity);
+
+    const overlay = document.getElementById('am-overlay');
+    overlay.classList.add('open');
+    setTimeout(() => {
+      const el = document.getElementById('am-company');
+      if (el) el.focus();
+    }, 120);
+  };
+
+  window.closeAddMarker = function() {
+    document.getElementById('am-overlay').classList.remove('open');
+  };
+
+  // Close on backdrop click (event delegation)
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'am-overlay') closeAddMarker();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('am-overlay').classList.contains('open')) {
+      closeAddMarker();
+    }
+  });
+
+  window.amSubmit = function() {
+    const company  = (document.getElementById('am-company').value  || '').trim();
+    const country  = (document.getElementById('am-country').value  || '').trim();
+    const facility = (document.getElementById('am-facility').value || '').trim();
+    const lat      = parseFloat(document.getElementById('am-lat').value);
+    const lng      = parseFloat(document.getElementById('am-lng').value);
+    const status   = document.getElementById('am-status').value;
+    const startVal = document.getElementById('am-start').value;
+    const restart  = (document.getElementById('am-restart').value || 'Unknown').trim();
+    const capacity = (document.getElementById('am-capacity').value  || '').trim();
+    const conf     = document.getElementById('am-confidence').value;
+    const desc     = (document.getElementById('am-desc').value    || '').trim();
+    const source   = (document.getElementById('am-source').value  || '').trim();
+
+    // Validation
+    if (!company) { document.getElementById('am-company').focus(); return; }
+    if (!country) { document.getElementById('am-country').focus(); return; }
+    if (isNaN(lat) || isNaN(lng)) { document.getElementById('am-lat').focus(); return; }
+
+    // Map intensity → impact
+    const impact = _amIntensity >= 4 ? 'High' : _amIntensity >= 2 ? 'Medium' : 'Low';
+
+    // Build company string
+    const companyStr = facility ? company + ' — ' + facility : company;
+
+    const entry = {
+      id:         _amNextId++,
+      company:    companyStr,
+      country:    country,
+      lat:        lat,
+      lng:        lng,
+      status:     status,
+      type:       desc || status + ' — user-added marker',
+      start:      startVal || '',
+      restart:    restart,
+      products:   [..._amProducts],
+      capacity:   capacity,
+      impact:     impact,
+      confidence: conf,
+      source:     source
+    };
+
+    DISRUPTIONS.push(entry);
+    closeAddMarker();
+
+    // Re-render everything
+    renderGlobe();
+    renderDisruptions();
+    renderStats();
+
+    // Auto-select the new marker
+    setTimeout(() => {
+      selectedId = entry.id;
+      renderDisruptions();
+      const el = document.querySelector(`.dis-item[data-id="${entry.id}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+  };
+
+  // ── RIGHT-CLICK on globe ──────────────────────────────────────────────
+  // Attach to both the container AND the canvas (Three.js renderer creates canvas
+  // that can absorb contextmenu before it bubbles to the parent div).
+  function _onGlobeRightClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!globe) return;
+    const coords = globe.toGlobeCoords(e.clientX, e.clientY);
+    if (!coords) return; // click outside the sphere
+    openAddMarker(coords.lat, coords.lng);
+  }
+
+  const _globeEl = document.getElementById('globeViz');
+  _globeEl.addEventListener('contextmenu', _onGlobeRightClick);
+
+  // Attach to canvas once Three.js renderer has created it
+  setTimeout(function() {
+    const canvas = _globeEl.querySelector('canvas');
+    if (canvas) canvas.addEventListener('contextmenu', _onGlobeRightClick);
+  }, 1500);
+
+  // ── Show hint briefly on first load ──────────────────────────────────
+  const hint = document.getElementById('rc-hint');
+  if (hint) {
+    setTimeout(() => {
+      hint.classList.add('show');
+      setTimeout(() => hint.classList.remove('show'), 3500);
+    }, 2000);
+  }
+
+});
+
 </script>
+
+<!-- ── ADD MARKER MODAL ── -->
+<div id="am-overlay">
+  <div id="am-modal" role="dialog" aria-modal="true" aria-labelledby="am-title">
+    <div id="am-header">
+      <span id="am-title">&#43; Add Disruption Marker</span>
+      <button id="am-close" onclick="closeAddMarker()" title="Close">&times;</button>
+    </div>
+
+    <div id="am-body">
+
+      <!-- Company + Country -->
+      <div class="am-row">
+        <div class="am-field" style="flex:2">
+          <label class="am-label">Company <span class="req">*</span></label>
+          <input id="am-company" class="am-input" type="text" placeholder="e.g. Shell Pearl GTL" autocomplete="off"/>
+        </div>
+        <div class="am-field" style="flex:1">
+          <label class="am-label">Country <span class="req">*</span></label>
+          <input id="am-country" class="am-input" type="text" placeholder="e.g. Qatar" autocomplete="off"/>
+        </div>
+      </div>
+
+      <!-- Facility -->
+      <div class="am-field">
+        <label class="am-label">Facility / Location</label>
+        <input id="am-facility" class="am-input" type="text" placeholder="e.g. Ras Laffan Industrial City" autocomplete="off"/>
+      </div>
+
+      <!-- Lat / Lng -->
+      <div class="am-row">
+        <div class="am-field">
+          <label class="am-label">Latitude <span class="req">*</span></label>
+          <input id="am-lat" class="am-input" type="number" step="0.0001" placeholder="25.9304"/>
+          <span class="am-coords-hint">Auto-filled from right-click position</span>
+        </div>
+        <div class="am-field">
+          <label class="am-label">Longitude <span class="req">*</span></label>
+          <input id="am-lng" class="am-input" type="number" step="0.0001" placeholder="51.5549"/>
+        </div>
+      </div>
+
+      <!-- Outage Type + Intensity -->
+      <div class="am-row">
+        <div class="am-field">
+          <label class="am-label">Outage Type <span class="req">*</span></label>
+          <select id="am-status" class="am-select" onchange="amUpdateIntensity()">
+            <option value="Shutdown">Force Majeure / Shutdown</option>
+            <option value="Reduced">Reduced Rates</option>
+            <option value="Monitoring">Monitoring / Alert</option>
+            <option value="Maintenance">Maintenance Shutdown</option>
+          </select>
+        </div>
+        <div class="am-field">
+          <label class="am-label">Intensity</label>
+          <div id="am-intensity-row">
+            <button class="am-dot-btn" data-score="1" onclick="amSetIntensity(1)" title="Level 1">&#9679;</button>
+            <button class="am-dot-btn" data-score="2" onclick="amSetIntensity(2)" title="Level 2">&#9679;</button>
+            <button class="am-dot-btn" data-score="3" onclick="amSetIntensity(3)" title="Level 3">&#9679;</button>
+            <button class="am-dot-btn" data-score="4" onclick="amSetIntensity(4)" title="Level 4">&#9679;</button>
+            <button class="am-dot-btn" data-score="5" onclick="amSetIntensity(5)" title="Level 5">&#9679;</button>
+            <span id="am-intensity-label">High</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="am-row">
+        <div class="am-field">
+          <label class="am-label">Outage Start</label>
+          <input id="am-start" class="am-input" type="date"/>
+        </div>
+        <div class="am-field">
+          <label class="am-label">Est. Restart</label>
+          <input id="am-restart" class="am-input" type="text" placeholder="e.g. Q3 2026 or Unknown"/>
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div class="am-field">
+        <label class="am-label">Products Impacted</label>
+        <div id="am-product-chips"></div>
+        <div id="am-prod-input-wrap" style="margin-top:6px">
+          <input id="am-prod-input" class="am-input" type="text" placeholder="e.g. Ethylene oxide"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();amAddProduct();}"/>
+          <button id="am-prod-add" onclick="amAddProduct()">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Capacity + Confidence -->
+      <div class="am-row">
+        <div class="am-field">
+          <label class="am-label">Capacity</label>
+          <input id="am-capacity" class="am-input" type="text" placeholder="e.g. ~450 kt/yr"/>
+        </div>
+        <div class="am-field">
+          <label class="am-label">Confidence</label>
+          <select id="am-confidence" class="am-select">
+            <option value="Confirmed">Confirmed</option>
+            <option value="Reported">Reported</option>
+            <option value="Estimated">Estimated</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="am-field">
+        <label class="am-label">Description / Type</label>
+        <textarea id="am-desc" class="am-textarea" placeholder="e.g. Force Majeure — drone strike damage; 1+ year repair timeline"></textarea>
+      </div>
+
+      <!-- Source -->
+      <div class="am-field">
+        <label class="am-label">Source Link</label>
+        <input id="am-source" class="am-input" type="url" placeholder="https://..."/>
+      </div>
+
+    </div><!-- /am-body -->
+
+    <div id="am-footer">
+      <button id="am-cancel" onclick="closeAddMarker()">Cancel</button>
+      <button id="am-submit" onclick="amSubmit()">Add to Globe</button>
+    </div>
+  </div>
+</div>
+
+<!-- Right-click hint -->
+<div id="rc-hint">Right-click globe to add a marker</div>
+
 </body>
 </html>
